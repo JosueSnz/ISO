@@ -1,0 +1,14 @@
+comandos:
+
+-- DI:pino,estado --
+pino= [1..8]
+estado= 0- OFF
+        1- ON
+        2- PULSE
+
+-- AI:pino,valor --
+pino= [1 2]
+valor= leitura TPS
+
+-- GET_STATUS --
+STATUS:do2, do3, do4, ao1, ao2 
