@@ -2,10 +2,11 @@
 #define MAIN_H
 
 #include <Arduino.h>
-#include <WiFi.h>
-#include <ESPmDNS.h>
-#include <WiFiUdp.h>
-#include <ArduinoOTA.h>
+#include <BluetoothSerial.h>
+// #include <WiFi.h>
+// #include <ESPmDNS.h>
+// #include <WiFiUdp.h>
+// #include <ArduinoOTA.h>
 
 // Comunicação UART LV/HV
 #define RXHV 16 
@@ -23,8 +24,10 @@
 
 // Entradas digitais para o ESP (INV-->ESP)
 #define do2 35 
-#define do3 23  
-#define do4 34 
+// #define do3 23 // Anterior
+// #define do4 34 // Anterior 
+#define do3 34
+#define do4 23
 
 // Saídas PWM do ESP (ESP-->INV)
 #define ai1 33

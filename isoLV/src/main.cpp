@@ -35,16 +35,19 @@ unsigned long ultimoEnvioCAN = 0;
 const int INTERVALO_CONTROLE_MS = 20; // Envia comandos de controle a cada 20ms (50 Hz)
 const int INTERVALO_CAN_MS = 100;     // Envia dados no CAN a cada 100ms (10 Hz)
 
+// Bluetooth
+BluetoothSerial SerialBT; 
+
 // Progamação via OTA
-const char* ssid = "NOTEBOOK 3028";       
-const char* password = "j4]5428J";  
+// const char* ssid = "NOTEBOOK 3028";       
+// const char* password = "j4]5428J";  
 
-IPAddress local_IP(192, 168, 137, 181); 
-IPAddress gateway(192, 168, 137, 1);    
-IPAddress subnet(255, 255, 255, 0);   
+// IPAddress local_IP(192, 168, 137, 181); 
+// IPAddress gateway(192, 168, 137, 1);    
+// IPAddress subnet(255, 255, 255, 0);   
 
-const char* ota_hostname = "LV";     
-const char* ota_password = "4321"; 
+// const char* ota_hostname = "LV";     
+// const char* ota_password = "4321"; 
 
 // =================================================================
 // === SETUP ===
@@ -53,56 +56,57 @@ const char* ota_password = "4321";
 void setup() {
   Serial.begin(921600);
   Serial2.begin(115200, SERIAL_8N1, RXHV, TXHV);
+  SerialBT.begin("esp32LV");
 
-  if (!WiFi.config(local_IP, gateway, subnet)) {
-    Serial.println("Falha ao configurar o IP estático");
-  }
+  // if (!WiFi.config(local_IP, gateway, subnet)) {
+  //   Serial.println("Falha ao configurar o IP estático");
+  // }
 
-  // Inicializando beacon
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("Connection Failed! Rebooting...");
-    delay(5000);
-    ESP.restart();
-  }
+  // // Inicializando beacon
+  // WiFi.mode(WIFI_STA);
+  // WiFi.begin(ssid, password);
+  // while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+  //   Serial.println("Connection Failed! Rebooting...");
+  //   delay(5000);
+  //   ESP.restart();
+  // }
 
-  Serial.println("Ready");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+  // Serial.println("Ready");
+  // Serial.print("IP address: ");
+  // Serial.println(WiFi.localIP());
 
 
-  // --- Configuração do OTA ---
-  ArduinoOTA.setHostname(ota_hostname);
-  ArduinoOTA.setPassword(ota_password);
+  // // --- Configuração do OTA ---
+  // ArduinoOTA.setHostname(ota_hostname);
+  // ArduinoOTA.setPassword(ota_password);
 
-  // Funções de feedback (callbacks) para o processo de OTA.
-  // Elas são ótimas para depuração no Monitor Serial.
-  ArduinoOTA
-    .onStart([]() {
-      String type;
-      if (ArduinoOTA.getCommand() == U_FLASH)
-        type = "sketch";
-      else // U_SPIFFS
-        type = "filesystem";
-      Serial.println("Start updating " + type);
-    })
-    .onEnd([]() {
-      Serial.println("\nEnd");
-    })
-    .onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-    })
-    .onError([](ota_error_t error) {
-      Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed");
-    });
+  // // Funções de feedback (callbacks) para o processo de OTA.
+  // // Elas são ótimas para depuração no Monitor Serial.
+  // ArduinoOTA
+  //   .onStart([]() {
+  //     String type;
+  //     if (ArduinoOTA.getCommand() == U_FLASH)
+  //       type = "sketch";
+  //     else // U_SPIFFS
+  //       type = "filesystem";
+  //     Serial.println("Start updating " + type);
+  //   })
+  //   .onEnd([]() {
+  //     Serial.println("\nEnd");
+  //   })
+  //   .onProgress([](unsigned int progress, unsigned int total) {
+  //     Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  //   })
+  //   .onError([](ota_error_t error) {
+  //     Serial.printf("Error[%u]: ", error);
+  //     if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+  //     else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+  //     else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+  //     else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+  //     else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  //   });
 
-  ArduinoOTA.begin();
+  // ArduinoOTA.begin();
 
 /*
   // --- Inicialização do Módulo CAN ---
@@ -179,7 +183,7 @@ void recvWithEndMarker() {
 void loop() {
 
   // Verifica se há atualizações OTA
-  ArduinoOTA.handle();
+  // ArduinoOTA.handle();
 
   // --- Tarefa 1: Ler sensores locais (sempre) ---
   valor_ai1 = analogRead(ai1);
@@ -214,8 +218,8 @@ void loop() {
             // Envia o novo estado (0 para desligado, 1 para ligado)
             sprintf(command_buffer, "DI:%d,%d\n", pinIndex, estadoAtual);
             Serial2.print(command_buffer);
-            Serial.print("Mudança detectada no DI"); Serial.print(pinIndex);
-            Serial.print(" para o estado "); Serial.println(estadoAtual);
+            SerialBT.print("Mudança detectada no DI"); SerialBT.print(pinIndex);
+            SerialBT.print(" para o estado "); SerialBT.println(estadoAtual);
         }
         // Atualiza a memória para a próxima verificação
         ultimoEstadoDI[i] = estadoAtual;
@@ -238,9 +242,9 @@ void loop() {
       // Serial.print("Recebido STATUS - DO2: "); Serial.println(status_do2);
 
       // Ativa as saídas digitais locais com base no status recebido
-      digitalWrite(do2, status_do2);
-      digitalWrite(do3, status_do3);
-      digitalWrite(do4, status_do4);
+      digitalWrite(do2, !status_do2);
+      digitalWrite(do3, !status_do3);
+      digitalWrite(do4, !status_do4);
 
       //retirar dps
       Serial.print("DO2: "); Serial.print(status_do2);

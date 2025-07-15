@@ -27,16 +27,19 @@ bool ultimoEstadoBotao = HIGH;
 unsigned long tempoUltimoDebounce = 0;
 const long delayDebounce = 50;
 
+// Bluetooth
+BluetoothSerial SerialBT; 
+
 // Progamação via OTA
-const char* ssid = "NOTEBOOK 3028";       
-const char* password = "j4]5428J";  
+// const char* ssid = "NOTEBOOK 3028";       
+// const char* password = "j4]5428J";  
 
-IPAddress local_IP(192, 168, 137, 180); 
-IPAddress gateway(192, 168, 137, 1);    
-IPAddress subnet(255, 255, 255, 0);   
+// IPAddress local_IP(192, 168, 137, 180); 
+// IPAddress gateway(192, 168, 137, 1);    
+// IPAddress subnet(255, 255, 255, 0);   
 
-const char* ota_hostname = "HV";     
-const char* ota_password = "4321"; 
+// const char* ota_hostname = "HV";     
+// const char* ota_password = "4321"; 
 
 // =================================================================
 // === SETUP ===
@@ -45,56 +48,57 @@ const char* ota_password = "4321";
 void setup() {
   Serial.begin(921600);
   Serial2.begin(115200, SERIAL_8N1, RXHV, TXHV); 
+  SerialBT.begin("esp32HV");
 
-  if (!WiFi.config(local_IP, gateway, subnet)) {
-    Serial.println("Falha ao configurar o IP estático");
-  }
+  // if (!WiFi.config(local_IP, gateway, subnet)) {
+  //   Serial.println("Falha ao configurar o IP estático");
+  // }
 
-  // Inicializando beacon
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("Connection Failed! Rebooting...");
-    delay(5000);
-    ESP.restart();
-  }
+  // // Inicializando beacon
+  // WiFi.mode(WIFI_STA);
+  // WiFi.begin(ssid, password);
+  // while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+  //   Serial.println("Connection Failed! Rebooting...");
+  //   delay(5000);
+  //   ESP.restart();
+  // }
 
-  Serial.println("Ready");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
+  // Serial.println("Ready");
+  // Serial.print("IP address: ");
+  // Serial.println(WiFi.localIP());
 
 
-  // --- Configuração do OTA ---
-  ArduinoOTA.setHostname(ota_hostname);
-  ArduinoOTA.setPassword(ota_password);
+  // // --- Configuração do OTA ---
+  // ArduinoOTA.setHostname(ota_hostname);
+  // ArduinoOTA.setPassword(ota_password);
 
-  // Funções de feedback (callbacks) para o processo de OTA.
-  // Elas são ótimas para depuração no Monitor Serial.
-  ArduinoOTA
-    .onStart([]() {
-      String type;
-      if (ArduinoOTA.getCommand() == U_FLASH)
-        type = "sketch";
-      else // U_SPIFFS
-        type = "filesystem";
-      Serial.println("Start updating " + type);
-    })
-    .onEnd([]() {
-      Serial.println("\nEnd");
-    })
-    .onProgress([](unsigned int progress, unsigned int total) {
-      Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-    })
-    .onError([](ota_error_t error) {
-      Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed");
-    });
+  // // Funções de feedback (callbacks) para o processo de OTA.
+  // // Elas são ótimas para depuração no Monitor Serial.
+  // ArduinoOTA
+  //   .onStart([]() {
+  //     String type;
+  //     if (ArduinoOTA.getCommand() == U_FLASH)
+  //       type = "sketch";
+  //     else // U_SPIFFS
+  //       type = "filesystem";
+  //     Serial.println("Start updating " + type);
+  //   })
+  //   .onEnd([]() {
+  //     Serial.println("\nEnd");
+  //   })
+  //   .onProgress([](unsigned int progress, unsigned int total) {
+  //     Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  //   })
+  //   .onError([](ota_error_t error) {
+  //     Serial.printf("Error[%u]: ", error);
+  //     if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+  //     else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+  //     else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+  //     else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+  //     else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  //   });
 
-  ArduinoOTA.begin();
+  // ArduinoOTA.begin();
   
 
   // Portas digitais ESP-->INV
@@ -108,9 +112,9 @@ void setup() {
   }
   
   // Portas digitais INV-->ESP 
-  pinMode(do2, INPUT_PULLDOWN);
-  pinMode(do3, INPUT_PULLDOWN); //retirar o pulldown no final
-  pinMode(do4, INPUT_PULLDOWN);
+  pinMode(do2, INPUT);
+  pinMode(do3, INPUT);
+  pinMode(do4, INPUT);
 
   // TPS's
   pinMode(ai1, OUTPUT);
@@ -197,7 +201,7 @@ void parseAndExecute(char* data) {
                   Serial.print("Aviso: Pino "); Serial.print(targetPin); Serial.println(" já tem um pulso em andamento.");
                   return; 
                 }
-                Serial.print("Iniciando pulso de 2s no pino "); Serial.println(targetPin);
+                SerialBT.print("Iniciando pulso de 2s no pino "); SerialBT.println(targetPin);
                 
                 // Inicia o pulso PARA ESTE PINO
                 digitalWrite(targetPin, HIGH);
@@ -208,7 +212,6 @@ void parseAndExecute(char* data) {
                 Serial.println("Erro: Estado inválido para comando DI (use 0, 1 ou 2).");
                 break;
         }
-
     } else if (strcmp(command, "AI") == 0) { 
         // Comando esperado: "AI:pino,valor" (ex: "AI:1,120")
         param1 = strtok(NULL, ",");
@@ -237,10 +240,10 @@ void parseAndExecute(char* data) {
           long mappedValue = map(rawValue, calibratedMin, calibratedMax, 0, 4095);
           mappedValue = constrain(mappedValue, 0, 4095);
 
-          Serial.print("Comando AI. Pino: "); Serial.print(pinIndex);
-          Serial.print(", Valor Cru: "); Serial.print(rawValue);
-          Serial.print(", Valor Mapeado: "); Serial.println(mappedValue);
-          
+          SerialBT.print("Comando AI. Pino: "); SerialBT.print(pinIndex);
+          SerialBT.print(", Valor Cru: "); SerialBT.print(rawValue);
+          SerialBT.print(", Valor Mapeado: "); SerialBT.println(mappedValue);
+
           // Seleciona o canal com base no pinIndex e escreve o valor MAPEADO
           if (pinIndex == 1) {
             ledcWrite(0, mappedValue);
@@ -251,7 +254,6 @@ void parseAndExecute(char* data) {
               return;
           }
         }
-
     } else if (strcmp(command, "GET_STATUS") == 0) {
         // Comando esperado: "GET_STATUS"
         Serial.println("Comando GET_STATUS recebido.");
@@ -272,10 +274,10 @@ void parseAndExecute(char* data) {
         Serial.print("Enviando resposta: ");
         Serial.print(responseBuffer);
 
-    } else {
+      } else {
         Serial.print("Erro: Comando desconhecido -> ");
         Serial.println(command);
-    }
+      }
 }
 
 // =================================================================
@@ -285,33 +287,33 @@ void parseAndExecute(char* data) {
 void loop() {
 
   // Verifica se há atualizações OTA
-  ArduinoOTA.handle();
+  // ArduinoOTA.handle();
 
   // 1. LÓGICA DO BOTÃO PARA MUDAR O ESTADO
   bool estadoAtualBotao = digitalRead(pinoBotao);
   if (estadoAtualBotao != ultimoEstadoBotao) {
     tempoUltimoDebounce = millis();
   }
-  if ((millis() - tempoUltimoDebounce) > delayDebounce) {
+  if (!((millis() - tempoUltimoDebounce) > delayDebounce)) {
     if (estadoAtualBotao == LOW && ultimoEstadoBotao == HIGH) {
       if (currentState == NORMAL) {
         currentState = CALIBRANDO;
         calibMinTemp = 4095;
         calibMaxTemp = 0;
-        Serial.println("\n===== MODO DE CALIBRAÇÃO INICIADO =====");
+        SerialBT.println("\n===== MODO DE CALIBRAÇÃO INICIADO =====");
         digitalWrite(led, HIGH); // Liga o LED para indicar que está calibrando
       } else { // Estava em CALIBRANDO
         currentState = NORMAL;
         calibratedMin = calibMinTemp;
         calibratedMax = calibMaxTemp;
         if (calibratedMax <= calibratedMin) {
-          Serial.println("ERRO DE CALIBRAÇÃO! Usando valores padrão.");
+          SerialBT.println("ERRO DE CALIBRAÇÃO! Usando valores padrão.");
           calibratedMin = 0;
           calibratedMax = 4095;
           digitalWrite(led, HIGH); // Liga o LED para indicar erro
         }
-        Serial.println("\n===== CALIBRAÇÃO FINALIZADA =====");
-        Serial.print("Novo range: "); Serial.print(calibratedMin); Serial.print(" a "); Serial.println(calibratedMax);
+        SerialBT.println("\n===== CALIBRAÇÃO FINALIZADA =====");
+        SerialBT.print("Novo range: "); SerialBT.print(calibratedMin); SerialBT.print(" a "); SerialBT.println(calibratedMax);
         digitalWrite(led, LOW); // Desliga o LED ao sair do modo de calibração
       }
     }

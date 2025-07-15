@@ -4,10 +4,11 @@
 #include <Arduino.h>
 #include <SPI.h>      
 #include "mcp_can.h"
-#include <WiFi.h>
-#include <ESPmDNS.h>
-#include <WiFiUdp.h>
-#include <ArduinoOTA.h>
+#include <BluetoothSerial.h>
+// #include <WiFi.h>
+// #include <ESPmDNS.h>
+// #include <WiFiUdp.h>
+// #include <ArduinoOTA.h>
 
 // Comunicação UART LV/HV
 #define RXHV 16 
