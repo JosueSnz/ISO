@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <BluetoothSerial.h>
+#include <Preferences.h>
 // #include <WiFi.h>
 // #include <ESPmDNS.h>
 // #include <WiFiUdp.h>

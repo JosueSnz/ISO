@@ -16,12 +16,12 @@
 
 // Entradas digitais do ESP (Sensor-->ESP)
 #define di1 35
-#define di2 19  //no final o 34
+#define di2 34  //no final o 34
 #define di3 13
 #define di4 14
 #define di5 4 
 #define di6 22
-#define di7 21
+#define di7 21  
 #define di8 12
 
 // Saídas digitais do INV (INV-->ESP)

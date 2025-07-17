@@ -30,6 +30,9 @@ const long delayDebounce = 50;
 // Bluetooth
 BluetoothSerial SerialBT; 
 
+// Preferences para salvar dados de calibração
+Preferences preferences;
+
 // Progamação via OTA
 // const char* ssid = "NOTEBOOK 3028";       
 // const char* password = "j4]5428J";  
@@ -99,6 +102,17 @@ void setup() {
   //   });
 
   // ArduinoOTA.begin();
+
+  // Carrega os dados de calibração salvos anteriormente
+  preferences.begin("calib-dados", false);
+
+  calibratedMin = preferences.getInt("calibMin", 0);       // Chave "calibMin", padrão 0
+  calibratedMax = preferences.getInt("calibMax", 4095);    // Chave "calibMax", padrão 4095
+  
+  preferences.end();
+
+  Serial.print("Calibração carregada: Min = "); Serial.print(calibratedMin);
+  Serial.print(", Max = "); Serial.println(calibratedMax);
   
 
   // Portas digitais ESP-->INV
@@ -302,10 +316,14 @@ void loop() {
         calibMaxTemp = 0;
         SerialBT.println("\n===== MODO DE CALIBRAÇÃO INICIADO =====");
         digitalWrite(led, HIGH); // Liga o LED para indicar que está calibrando
+
       } else { // Estava em CALIBRANDO
         currentState = NORMAL;
-        calibratedMin = calibMinTemp;
-        calibratedMax = calibMaxTemp;
+        preferences.begin("calib-dados", false);
+        preferences.putInt("calibMin", calibratedMin);
+        preferences.putInt("calibMax", calibratedMax);
+        preferences.end();
+
         if (calibratedMax <= calibratedMin) {
           SerialBT.println("ERRO DE CALIBRAÇÃO! Usando valores padrão.");
           calibratedMin = 0;
